@@ -126,3 +126,51 @@ chrome.runtime.onMessage.addListener((message) => {
         updateVideo(videoId);
     }
 });
+
+async function postComment() {
+    const videoId = await getCurrentVideoId();
+    const inputElement = document.getElementById("comment-input");
+    const content = inputElement.value.trim();
+
+    if (!videoId) {
+        alert("YouTubeの動画ページではありません");
+        return;
+    }
+
+    if (!content) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/comments/${videoId}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    media_type: "youtube",
+                    content: content
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        inputElement.value = "";
+
+        // 投稿後、コメント一覧を再取得
+        await loadComments(videoId);
+
+    } catch (error) {
+        console.error("コメント投稿エラー:", error);
+        alert("コメントを投稿できませんでした");
+    }
+}
+
+document
+    .getElementById("post-comment-button")
+    .addEventListener("click", postComment);
