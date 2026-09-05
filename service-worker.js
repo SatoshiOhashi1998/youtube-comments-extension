@@ -8,14 +8,3 @@ chrome.sidePanel
         openPanelOnActionClick: true
     })
     .catch(console.error);
-
-
-// YouTubeのページが更新されたとき
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.url) {
-        chrome.runtime.sendMessage({
-            type: "youtube-url-changed",
-            url: changeInfo.url
-        });
-    }
-});

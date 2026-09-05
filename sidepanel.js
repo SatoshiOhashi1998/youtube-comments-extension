@@ -1,6 +1,11 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
+
 let editingCommentId = null;
 let otherCommentsVisible = false;
+
+// 動画更新処理の世代番号
+let updateGeneration = 0;
+
 
 async function getCurrentVideoId() {
     const [tab] = await chrome.tabs.query({
@@ -33,13 +38,13 @@ function getVideoIdFromUrl(urlString) {
 }
 
 
-function displayVideoId(videoId) {
-    const videoIdElement = document.getElementById("video-id");
+function displayVideoTitle(title) {
+    const titleElement = document.getElementById("video-title");
 
-    if (videoId) {
-        videoIdElement.textContent = videoId;
+    if (title) {
+        titleElement.textContent = title;
     } else {
-        videoIdElement.textContent = "YouTubeの動画ページではありません";
+        titleElement.textContent = "タイトルを取得できませんでした";
     }
 }
 
@@ -130,15 +135,155 @@ function displayComments(comments) {
 }
 
 
-async function updateVideo(videoId) {
-    displayVideoId(videoId);
+async function updateVideo(videoId, title = null) {
+
+    // 今回の更新処理に固有の番号を発行
+    const generation = ++updateGeneration;
+
+    console.log(
+        "updateVideo開始:",
+        generation,
+        videoId,
+        title
+    );
+
+    otherCommentsVisible = false;
+
+    document.getElementById(
+        "toggle-other-comments-button"
+    ).textContent = "その他のコメントを表示";
+
+    if (!videoId) {
+
+        // すでに新しい更新が始まっていたら中止
+        if (generation !== updateGeneration) {
+            return;
+        }
+
+        displayVideoTitle(null);
+        await loadComments(null);
+        return;
+    }
+
+    /*
+     * ここで古い処理でないことを確認
+     */
+    if (generation !== updateGeneration) {
+        console.log(
+            "古いupdateVideoを破棄:",
+            generation
+        );
+        return;
+    }
+
+    /*
+     * タイトルはここで即座に表示
+     */
+    displayVideoTitle(title);
+
+    /*
+     * コメント取得
+     */
     await loadComments(videoId);
+
+    /*
+     * コメント取得中に別動画へ移動していた場合、
+     * 古い結果をこれ以上使わない
+     */
+    if (generation !== updateGeneration) {
+        console.log(
+            "古いコメント取得結果:",
+            generation
+        );
+        return;
+    }
+
+    console.log(
+        "updateVideo完了:",
+        generation,
+        videoId,
+        title
+    );
 }
 
 
 async function updateVideoId() {
+
+    /*
+     * この初回処理にも新しい世代番号を割り当てる
+     */
+    const generation = ++updateGeneration;
+
     const videoId = await getCurrentVideoId();
-    await updateVideo(videoId);
+
+    /*
+     * 待っている間に別の動画更新が発生していたら、
+     * この初回処理は破棄する
+     */
+    if (generation !== updateGeneration) {
+        console.log(
+            "初回動画取得を破棄:",
+            generation
+        );
+        return;
+    }
+
+    if (!videoId) {
+        await updateVideo(null);
+        return;
+    }
+
+    try {
+        const [tab] = await chrome.tabs.query({
+            active: true,
+            currentWindow: true
+        });
+
+        if (!tab || !tab.id) {
+            await updateVideo(videoId);
+            return;
+        }
+
+        const response = await chrome.tabs.sendMessage(
+            tab.id,
+            {
+                type: "get-youtube-title",
+                videoId: videoId
+            }
+        );
+
+        /*
+         * タイトル取得中に別動画へ移動していたら、
+         * 古い結果は使わない
+         */
+        if (generation !== updateGeneration) {
+            console.log(
+                "初回タイトル取得結果を破棄:",
+                generation
+            );
+            return;
+        }
+
+        await updateVideo(
+            videoId,
+            response?.title || null
+        );
+
+    } catch (error) {
+        console.error(
+            "初回タイトル取得エラー:",
+            error
+        );
+
+        /*
+         * すでに別動画へ移動していたら何もしない
+         */
+        if (generation !== updateGeneration) {
+            return;
+        }
+
+        await updateVideo(videoId);
+    }
 }
 
 
@@ -146,13 +291,24 @@ async function updateVideoId() {
 updateVideoId();
 
 
-// YouTubeのURL変更通知を受け取る
+// YouTubeの動画変更通知を受け取る
 chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "youtube-url-changed") {
-        const videoId = getVideoIdFromUrl(message.url);
-        updateVideo(videoId);
+
+    if (message.type === "youtube-video-changed") {
+
+        console.log(
+            "Side Panelで動画変更を受信:",
+            message.videoId,
+            message.title
+        );
+
+        updateVideo(
+            message.videoId,
+            message.title
+        );
     }
 });
+
 
 async function postComment() {
     const videoId = await getCurrentVideoId();
@@ -185,6 +341,7 @@ async function postComment() {
                     })
                 }
             );
+
         } else {
             // 新規コメント投稿
             response = await fetch(
@@ -212,8 +369,13 @@ async function postComment() {
         // 編集状態を解除
         editingCommentId = null;
 
-        document.getElementById("post-comment-button").textContent = "投稿";
-        document.getElementById("cancel-edit-button").hidden = true;
+        document.getElementById(
+            "post-comment-button"
+        ).textContent = "投稿";
+
+        document.getElementById(
+            "cancel-edit-button"
+        ).hidden = true;
 
         // コメント一覧を再取得
         await loadComments(videoId);
@@ -223,6 +385,7 @@ async function postComment() {
         alert("コメントを保存できませんでした");
     }
 }
+
 
 function editComment(comment) {
     const inputElement = document.getElementById("comment-input");
@@ -237,6 +400,7 @@ function editComment(comment) {
     postButton.textContent = "更新";
     cancelButton.hidden = false;
 }
+
 
 async function deleteComment(comment) {
     const confirmed = confirm(
@@ -269,6 +433,7 @@ async function deleteComment(comment) {
     }
 }
 
+
 async function loadOtherComments(videoId) {
     if (!videoId) {
         return [];
@@ -286,11 +451,19 @@ async function loadOtherComments(videoId) {
         return await response.json();
 
     } catch (error) {
-        console.error("その他のコメント取得エラー:", error);
-        alert("その他のコメントを取得できませんでした");
+        console.error(
+            "その他のコメント取得エラー:",
+            error
+        );
+
+        alert(
+            "その他のコメントを取得できませんでした"
+        );
+
         return [];
     }
 }
+
 
 document
     .getElementById("post-comment-button")
@@ -300,20 +473,32 @@ document
 document
     .getElementById("cancel-edit-button")
     .addEventListener("click", () => {
-        const inputElement = document.getElementById("comment-input");
-        const postButton = document.getElementById("post-comment-button");
-        const cancelButton = document.getElementById("cancel-edit-button");
+
+        const inputElement = document.getElementById(
+            "comment-input"
+        );
+
+        const postButton = document.getElementById(
+            "post-comment-button"
+        );
+
+        const cancelButton = document.getElementById(
+            "cancel-edit-button"
+        );
 
         editingCommentId = null;
 
         inputElement.value = "";
+
         postButton.textContent = "投稿";
         cancelButton.hidden = true;
     });
 
+
 document
     .getElementById("toggle-other-comments-button")
     .addEventListener("click", async () => {
+
         const button = document.getElementById(
             "toggle-other-comments-button"
         );
@@ -325,18 +510,25 @@ document
         }
 
         if (otherCommentsVisible) {
+
             // 非表示にする
             otherCommentsVisible = false;
-            button.textContent = "その他のコメントを表示";
+
+            button.textContent =
+                "その他のコメントを表示";
 
             await loadComments(videoId);
 
         } else {
+
             // 表示する
-            const otherComments = await loadOtherComments(videoId);
+            const otherComments =
+                await loadOtherComments(videoId);
 
             otherCommentsVisible = true;
-            button.textContent = "その他のコメントを非表示";
+
+            button.textContent =
+                "その他のコメントを非表示";
 
             // YouTubeコメントを取得
             const response = await fetch(
@@ -344,10 +536,13 @@ document
             );
 
             if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
+                throw new Error(
+                    `HTTP error: ${response.status}`
+                );
             }
 
-            const youtubeComments = await response.json();
+            const youtubeComments =
+                await response.json();
 
             // 2種類をまとめて表示
             displayComments([
