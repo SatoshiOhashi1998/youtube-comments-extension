@@ -1,3 +1,6 @@
+const API_BASE_URL = "http://127.0.0.1:5000";
+
+
 async function getCurrentVideoId() {
     const [tab] = await chrome.tabs.query({
         active: true,
@@ -40,9 +43,75 @@ function displayVideoId(videoId) {
 }
 
 
+async function loadComments(videoId) {
+    const commentsElement = document.getElementById("comments");
+
+    if (!videoId) {
+        commentsElement.textContent = "動画が選択されていません";
+        return;
+    }
+
+    commentsElement.textContent = "コメントを取得中...";
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/comments/${videoId}?type=video`
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const comments = await response.json();
+
+        displayComments(comments);
+
+    } catch (error) {
+        console.error("コメント取得エラー:", error);
+        commentsElement.textContent = "コメントを取得できませんでした";
+    }
+}
+
+
+function displayComments(comments) {
+    const commentsElement = document.getElementById("comments");
+
+    if (comments.length === 0) {
+        commentsElement.textContent = "コメントはありません";
+        return;
+    }
+
+    commentsElement.innerHTML = "";
+
+    comments.forEach(comment => {
+        const commentElement = document.createElement("div");
+        commentElement.className = "comment";
+
+        const contentElement = document.createElement("div");
+        contentElement.className = "comment-content";
+        contentElement.textContent = comment.content;
+
+        const dateElement = document.createElement("div");
+        dateElement.className = "comment-date";
+        dateElement.textContent = comment.created_at;
+
+        commentElement.appendChild(contentElement);
+        commentElement.appendChild(dateElement);
+
+        commentsElement.appendChild(commentElement);
+    });
+}
+
+
+async function updateVideo(videoId) {
+    displayVideoId(videoId);
+    await loadComments(videoId);
+}
+
+
 async function updateVideoId() {
     const videoId = await getCurrentVideoId();
-    displayVideoId(videoId);
+    await updateVideo(videoId);
 }
 
 
@@ -54,6 +123,6 @@ updateVideoId();
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "youtube-url-changed") {
         const videoId = getVideoIdFromUrl(message.url);
-        displayVideoId(videoId);
+        updateVideo(videoId);
     }
 });
