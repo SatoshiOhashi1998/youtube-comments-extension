@@ -1,5 +1,6 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
 let editingCommentId = null;
+let otherCommentsVisible = false;
 
 async function getCurrentVideoId() {
     const [tab] = await chrome.tabs.query({
@@ -91,9 +92,19 @@ function displayComments(comments) {
         contentElement.className = "comment-content";
         contentElement.textContent = comment.content;
 
-        const dateElement = document.createElement("div");
+        const metaElement = document.createElement("div");
+        metaElement.className = "comment-meta";
+
+        const typeElement = document.createElement("span");
+        typeElement.className = "comment-type";
+        typeElement.textContent = comment.media_type;
+
+        const dateElement = document.createElement("span");
         dateElement.className = "comment-date";
         dateElement.textContent = comment.created_at;
+
+        metaElement.appendChild(typeElement);
+        metaElement.appendChild(dateElement);
 
         const editButton = document.createElement("button");
         editButton.textContent = "編集";
@@ -110,7 +121,7 @@ function displayComments(comments) {
         });
 
         commentElement.appendChild(contentElement);
-        commentElement.appendChild(dateElement);
+        commentElement.appendChild(metaElement);
         commentElement.appendChild(editButton);
         commentElement.appendChild(deleteButton);
 
@@ -258,6 +269,29 @@ async function deleteComment(comment) {
     }
 }
 
+async function loadOtherComments(videoId) {
+    if (!videoId) {
+        return [];
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/comments/${videoId}/others?exclude_type=youtube`
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        return await response.json();
+
+    } catch (error) {
+        console.error("その他のコメント取得エラー:", error);
+        alert("その他のコメントを取得できませんでした");
+        return [];
+    }
+}
+
 document
     .getElementById("post-comment-button")
     .addEventListener("click", postComment);
@@ -275,4 +309,50 @@ document
         inputElement.value = "";
         postButton.textContent = "投稿";
         cancelButton.hidden = true;
+    });
+
+document
+    .getElementById("toggle-other-comments-button")
+    .addEventListener("click", async () => {
+        const button = document.getElementById(
+            "toggle-other-comments-button"
+        );
+
+        const videoId = await getCurrentVideoId();
+
+        if (!videoId) {
+            return;
+        }
+
+        if (otherCommentsVisible) {
+            // 非表示にする
+            otherCommentsVisible = false;
+            button.textContent = "その他のコメントを表示";
+
+            await loadComments(videoId);
+
+        } else {
+            // 表示する
+            const otherComments = await loadOtherComments(videoId);
+
+            otherCommentsVisible = true;
+            button.textContent = "その他のコメントを非表示";
+
+            // YouTubeコメントを取得
+            const response = await fetch(
+                `${API_BASE_URL}/api/comments/${videoId}?type=youtube`
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error: ${response.status}`);
+            }
+
+            const youtubeComments = await response.json();
+
+            // 2種類をまとめて表示
+            displayComments([
+                ...youtubeComments,
+                ...otherComments
+            ]);
+        }
     });

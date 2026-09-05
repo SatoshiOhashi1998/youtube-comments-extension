@@ -2,32 +2,61 @@ body {
     font-family: sans-serif;
     margin: 0;
     padding: 16px;
+
     color: #222;
     background: #fff;
 }
 
 h1 {
-    font-size: 18px;
     margin: 0 0 16px;
+    font-size: 18px;
 }
 
 h2 {
-    font-size: 16px;
     margin: 20px 0 10px;
+    font-size: 16px;
 }
+
 
 /* =========================
    Video ID
    ========================= */
 
 #video-id {
-    word-break: break-all;
     padding: 10px;
+
     background: #f0f0f0;
     border-radius: 6px;
+
     font-size: 13px;
     color: #555;
+
+    word-break: break-all;
 }
+
+
+/* =========================
+   Other comments button
+   ========================= */
+
+#toggle-other-comments-button {
+    margin-bottom: 10px;
+    padding: 6px 12px;
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+
+    background: #fff;
+    color: #555;
+
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#toggle-other-comments-button:hover {
+    background: #f0f0f0;
+}
+
 
 /* =========================
    Comment input
@@ -39,6 +68,7 @@ h2 {
 
 #comment-input {
     display: block;
+
     width: 100%;
     min-height: 80px;
     box-sizing: border-box;
@@ -57,9 +87,11 @@ h2 {
 
 #comment-input:focus {
     outline: none;
+
     border-color: #065fd4;
     box-shadow: 0 0 0 1px #065fd4;
 }
+
 
 /* =========================
    Comment action buttons
@@ -69,6 +101,7 @@ h2 {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+
     margin-top: 8px;
 }
 
@@ -83,6 +116,7 @@ h2 {
     cursor: pointer;
 }
 
+
 /* 投稿 / 更新 */
 
 #post-comment-button {
@@ -93,6 +127,7 @@ h2 {
 #post-comment-button:hover {
     background: #0556b8;
 }
+
 
 /* キャンセル */
 
@@ -105,6 +140,7 @@ h2 {
     background: #ddd;
 }
 
+
 /* =========================
    Comments
    ========================= */
@@ -115,6 +151,7 @@ h2 {
 
 .comment {
     padding: 12px 0;
+
     border-bottom: 1px solid #ddd;
 }
 
@@ -124,11 +161,35 @@ h2 {
     line-height: 1.5;
 }
 
-.comment-date {
+
+/* =========================
+   Comment meta
+   ========================= */
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
     margin-top: 6px;
+}
+
+.comment-type {
+    padding: 2px 6px;
+
+    border-radius: 4px;
+
+    background: #eee;
+    color: #555;
+
+    font-size: 11px;
+}
+
+.comment-date {
     font-size: 12px;
     color: #777;
 }
+
 
 /* =========================
    Edit / Delete buttons
