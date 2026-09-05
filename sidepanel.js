@@ -55,7 +55,7 @@ async function loadComments(videoId) {
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/api/comments/${videoId}?type=video`
+            `${API_BASE_URL}/api/comments/${videoId}?type=youtube`
         );
 
         if (!response.ok) {
