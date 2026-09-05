@@ -2,111 +2,154 @@ body {
     font-family: sans-serif;
     margin: 0;
     padding: 16px;
+    color: #222;
+    background: #fff;
 }
 
 h1 {
     font-size: 18px;
-    margin-top: 0;
+    margin: 0 0 16px;
 }
+
+h2 {
+    font-size: 16px;
+    margin: 20px 0 10px;
+}
+
+/* =========================
+   Video ID
+   ========================= */
 
 #video-id {
     word-break: break-all;
     padding: 10px;
     background: #f0f0f0;
     border-radius: 6px;
+    font-size: 13px;
+    color: #555;
 }
 
-#comments {
-    margin-top: 10px;
-}
-
-.comment {
-    padding: 10px 0;
-    border-bottom: 1px solid #ddd;
-}
-
-.comment-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.comment-date {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #777;
-}
+/* =========================
+   Comment input
+   ========================= */
 
 #comment-input-area {
     margin-bottom: 20px;
 }
 
 #comment-input {
+    display: block;
     width: 100%;
+    min-height: 80px;
     box-sizing: border-box;
+
     padding: 10px;
-    resize: vertical;
+
     border: 1px solid #ccc;
     border-radius: 6px;
+
     font-family: inherit;
     font-size: 14px;
+    line-height: 1.5;
+
+    resize: vertical;
 }
 
-#post-comment-button {
+#comment-input:focus {
+    outline: none;
+    border-color: #065fd4;
+    box-shadow: 0 0 0 1px #065fd4;
+}
+
+/* =========================
+   Comment action buttons
+   ========================= */
+
+#comment-action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
     margin-top: 8px;
-    padding: 8px 16px;
+}
+
+#post-comment-button,
+#cancel-edit-button {
+    padding: 7px 16px;
+
     border: none;
     border-radius: 6px;
+
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* 投稿 / 更新 */
+
+#post-comment-button {
     background: #065fd4;
     color: white;
-    cursor: pointer;
 }
 
 #post-comment-button:hover {
     background: #0556b8;
 }
 
-#comment-action-buttons {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-#post-comment-button,
-#cancel-edit-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-#post-comment-button {
-    background: #065fd4;
-    color: white;
-}
+/* キャンセル */
 
 #cancel-edit-button {
     background: #eee;
+    color: #333;
 }
 
-#comment-action-buttons {
-    display: flex;
-    gap: 8px;
+#cancel-edit-button:hover {
+    background: #ddd;
+}
+
+/* =========================
+   Comments
+   ========================= */
+
+#comments {
+    margin-top: 10px;
+}
+
+.comment {
+    padding: 12px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.comment-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+}
+
+.comment-date {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #777;
+}
+
+/* =========================
+   Edit / Delete buttons
+   ========================= */
+
+.comment button {
     margin-top: 8px;
-}
+    margin-right: 6px;
 
-#post-comment-button,
-#cancel-edit-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
+    padding: 4px 10px;
+
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    background: #fff;
+    color: #555;
+
+    font-size: 12px;
     cursor: pointer;
 }
 
-#post-comment-button {
-    background: #065fd4;
-    color: white;
-}
-
-#cancel-edit-button {
-    background: #eee;
+.comment button:hover {
+    background: #f0f0f0;
 }
