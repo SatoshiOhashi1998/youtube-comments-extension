@@ -64,3 +64,49 @@ h1 {
 #post-comment-button:hover {
     background: #0556b8;
 }
+
+#comment-action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#post-comment-button,
+#cancel-edit-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#post-comment-button {
+    background: #065fd4;
+    color: white;
+}
+
+#cancel-edit-button {
+    background: #eee;
+}
+
+#comment-action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#post-comment-button,
+#cancel-edit-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#post-comment-button {
+    background: #065fd4;
+    color: white;
+}
+
+#cancel-edit-button {
+    background: #eee;
+}

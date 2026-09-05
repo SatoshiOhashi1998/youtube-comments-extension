@@ -1,5 +1,5 @@
 const API_BASE_URL = "http://127.0.0.1:5000";
-
+let editingCommentId = null;
 
 async function getCurrentVideoId() {
     const [tab] = await chrome.tabs.query({
@@ -95,8 +95,16 @@ function displayComments(comments) {
         dateElement.className = "comment-date";
         dateElement.textContent = comment.created_at;
 
+        const editButton = document.createElement("button");
+        editButton.textContent = "編集";
+
+        editButton.addEventListener("click", () => {
+            editComment(comment);
+        });
+
         commentElement.appendChild(contentElement);
         commentElement.appendChild(dateElement);
+        commentElement.appendChild(editButton);
 
         commentsElement.appendChild(commentElement);
     });
@@ -142,35 +150,90 @@ async function postComment() {
     }
 
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/api/comments/${videoId}`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    media_type: "youtube",
-                    content: content
-                })
-            }
-        );
+        let response;
+
+        if (editingCommentId !== null) {
+            // コメント編集
+            response = await fetch(
+                `${API_BASE_URL}/api/comments/${editingCommentId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        content: content
+                    })
+                }
+            );
+        } else {
+            // 新規コメント投稿
+            response = await fetch(
+                `${API_BASE_URL}/api/comments/${videoId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        media_type: "youtube",
+                        content: content
+                    })
+                }
+            );
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP error: ${response.status}`);
         }
 
+        // 入力欄をクリア
         inputElement.value = "";
 
-        // 投稿後、コメント一覧を再取得
+        // 編集状態を解除
+        editingCommentId = null;
+
+        document.getElementById("post-comment-button").textContent = "投稿";
+        document.getElementById("cancel-edit-button").hidden = true;
+
+        // コメント一覧を再取得
         await loadComments(videoId);
 
     } catch (error) {
-        console.error("コメント投稿エラー:", error);
-        alert("コメントを投稿できませんでした");
+        console.error("コメント保存エラー:", error);
+        alert("コメントを保存できませんでした");
     }
+}
+
+function editComment(comment) {
+    const inputElement = document.getElementById("comment-input");
+    const postButton = document.getElementById("post-comment-button");
+    const cancelButton = document.getElementById("cancel-edit-button");
+
+    editingCommentId = comment.id;
+
+    inputElement.value = comment.content;
+    inputElement.focus();
+
+    postButton.textContent = "更新";
+    cancelButton.hidden = false;
 }
 
 document
     .getElementById("post-comment-button")
     .addEventListener("click", postComment);
+
+
+document
+    .getElementById("cancel-edit-button")
+    .addEventListener("click", () => {
+        const inputElement = document.getElementById("comment-input");
+        const postButton = document.getElementById("post-comment-button");
+        const cancelButton = document.getElementById("cancel-edit-button");
+
+        editingCommentId = null;
+
+        inputElement.value = "";
+        postButton.textContent = "投稿";
+        cancelButton.hidden = true;
+    });
