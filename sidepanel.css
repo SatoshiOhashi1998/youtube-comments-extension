@@ -1,0 +1,37 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 16px;
+}
+
+h1 {
+    font-size: 18px;
+    margin-top: 0;
+}
+
+#video-id {
+    word-break: break-all;
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 6px;
+}
+
+#comments {
+    margin-top: 10px;
+}
+
+.comment {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.comment-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.comment-date {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #777;
+}
