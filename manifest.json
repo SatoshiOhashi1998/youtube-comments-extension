@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "My YouTube Comments",
+    "version": "1.0.0",
+    "description": "YouTube用の自分のコメント管理拡張機能",
+    "permissions": [
+        "sidePanel",
+        "tabs"
+    ],
+    "host_permissions": [
+        "https://www.youtube.com/*"
+    ],
+    "background": {
+        "service_worker": "service-worker.js"
+    },
+    "action": {
+        "default_title": "My YouTube Comments"
+    },
+    "side_panel": {
+        "default_path": "sidepanel.html"
+    }
+}
