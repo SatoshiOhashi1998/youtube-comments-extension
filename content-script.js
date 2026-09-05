@@ -2,31 +2,7 @@ console.log("My YouTube Comments: content-script.js loaded");
 let lastVideoId = null;
 
 
-function getYouTubeVideoId() {
-    const url = new URL(window.location.href);
-
-    if (url.hostname !== "www.youtube.com") {
-        return null;
-    }
-
-    // 通常の動画: /watch?v=<videoId>
-    const videoId = url.searchParams.get("v");
-
-    if (videoId) {
-        return videoId;
-    }
-
-    // Shorts / Live: /shorts/<videoId>, /live/<videoId>
-    const pathMatch = url.pathname.match(
-        /^\/(?:shorts|live)\/([^/?]+)/
-    );
-
-    if (pathMatch) {
-        return pathMatch[1];
-    }
-
-    return null;
-}
+function getYouTubeVideoId() { const url = new URL(window.location.href); if (url.hostname !== "www.youtube.com") { return null; } return url.searchParams.get("v"); }
 
 
 function getYouTubeVideoTitle() {
