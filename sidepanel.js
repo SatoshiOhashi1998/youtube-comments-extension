@@ -102,9 +102,17 @@ function displayComments(comments) {
             editComment(comment);
         });
 
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "削除";
+
+        deleteButton.addEventListener("click", () => {
+            deleteComment(comment);
+        });
+
         commentElement.appendChild(contentElement);
         commentElement.appendChild(dateElement);
         commentElement.appendChild(editButton);
+        commentElement.appendChild(deleteButton);
 
         commentsElement.appendChild(commentElement);
     });
@@ -217,6 +225,37 @@ function editComment(comment) {
 
     postButton.textContent = "更新";
     cancelButton.hidden = false;
+}
+
+async function deleteComment(comment) {
+    const confirmed = confirm(
+        "このコメントを削除しますか？"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/comments/${comment.id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const videoId = await getCurrentVideoId();
+
+        await loadComments(videoId);
+
+    } catch (error) {
+        console.error("コメント削除エラー:", error);
+        alert("コメントを削除できませんでした");
+    }
 }
 
 document
