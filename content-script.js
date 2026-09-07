@@ -1,23 +1,72 @@
 console.log("My YouTube Comments: content-script.js loaded");
 let lastVideoId = null;
 
+function getYouTubeVideoId() {
+    const url = new URL(window.location.href);
 
-function getYouTubeVideoId() { const url = new URL(window.location.href); if (url.hostname !== "www.youtube.com") { return null; } return url.searchParams.get("v"); }
+    if (url.hostname !== "www.youtube.com") {
+        return null;
+    }
+
+    // 通常の動画
+    const videoId = url.searchParams.get("v");
+
+    if (videoId) {
+        return videoId;
+    }
+
+    // Shorts
+    const shortsMatch = url.pathname.match(
+        /^\/shorts\/([^/?]+)/
+    );
+
+    if (shortsMatch) {
+        return shortsMatch[1];
+    }
+
+    // Live
+    const liveMatch = url.pathname.match(
+        /^\/live\/([^/?]+)/
+    );
+
+    if (liveMatch) {
+        return liveMatch[1];
+    }
+
+    return null;
+}
+
 
 
 function getYouTubeVideoTitle() {
+
+    // 通常の動画ページ
     const titleElement = document.querySelector(
         "h1.ytd-watch-metadata"
     );
 
-    if (!titleElement) {
-        return null;
+    if (titleElement) {
+        const title = titleElement.textContent.trim();
+
+        if (title) {
+            return title;
+        }
     }
 
-    const title = titleElement.textContent.trim();
+    // Shortsなどでは document.title が使える
+    const documentTitle = document.title;
 
-    return title || null;
+    if (documentTitle) {
+        // YouTubeのページタイトルは
+        // 「動画タイトル - YouTube」になることがある
+        return documentTitle
+            .replace(/\s*-\s*YouTube\s*$/, "")
+            .trim();
+    }
+
+    return null;
 }
+
 
 
 async function waitForYouTubeVideoTitle(videoId, oldTitle = null) {

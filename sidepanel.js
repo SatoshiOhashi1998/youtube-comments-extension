@@ -20,16 +20,41 @@ async function getCurrentVideoId() {
     return getVideoIdFromUrl(tab.url);
 }
 
-
 function getVideoIdFromUrl(urlString) {
-    try {
+    try
+ {
         const url = new URL(urlString);
 
         if (url.hostname !== "www.youtube.com") {
             return null;
         }
 
-        return url.searchParams.get("v");
+        // 通常の動画
+        const videoId = url.searchParams.get("v");
+
+        if (videoId) {
+            return videoId;
+        }
+
+        // Shorts
+        const shortsMatch = url.pathname.match(
+            /^\/shorts\/([^/?]+)/
+        );
+
+        if (shortsMatch) {
+            return shortsMatch[1];
+        }
+
+        // Live
+        const liveMatch = url.pathname.match(
+            /^\/live\/([^/?]+)/
+        );
+
+        if (liveMatch) {
+            return liveMatch[1];
+        }
+
+        return null;
 
     } catch (error) {
         console.error(error);
