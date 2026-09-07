@@ -69,17 +69,18 @@ function getYouTubeVideoTitle() {
 
 
 
-async function waitForYouTubeVideoTitle(videoId, oldTitle = null) {
+async function waitForYouTubeVideoTitle(videoId) {
     for (let i = 0; i < 40; i++) {
 
         const currentVideoId = getYouTubeVideoId();
+
+        if (currentVideoId !== videoId) {
+            return null;
+        }
+
         const title = getYouTubeVideoTitle();
 
-        if (
-            currentVideoId === videoId &&
-            title &&
-            title !== oldTitle
-        ) {
+        if (title) {
             return title;
         }
 
@@ -103,16 +104,19 @@ async function notifyVideoChanged() {
         return;
     }
 
-    // 現在表示されているタイトルを保存
-    const oldTitle = getYouTubeVideoTitle();
-
     lastVideoId = videoId;
 
-    // 新しい動画のタイトルになるまで待つ
-    const title = await waitForYouTubeVideoTitle(
-        videoId,
-        oldTitle
-    );
+const title = await waitForYouTubeVideoTitle(
+    videoId
+);
+
+    // 待っている間に別のShortsへ移動していた場合は、
+    // 古い動画の通知を送らない
+    const currentVideoId = getYouTubeVideoId();
+
+    if (currentVideoId !== videoId) {
+        return;
+    }
 
     console.log(
         "YouTube動画変更:",
@@ -138,6 +142,18 @@ notifyVideoChanged();
  * YouTubeはSPAなので、URLの変化を監視する
  */
 setInterval(() => {
+    const url = window.location.href;
+    const videoId = getYouTubeVideoId();
+
+    console.log(
+        "Shorts監視:",
+        url,
+        "ID:",
+        videoId,
+        "last:",
+        lastVideoId
+    );
+
     notifyVideoChanged();
 }, 500);
 
