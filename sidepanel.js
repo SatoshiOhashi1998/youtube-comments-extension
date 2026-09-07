@@ -3,7 +3,7 @@ const API_BASE_URL = "http://127.0.0.1:5000";
 let editingCommentId = null;
 let otherCommentsVisible = false;
 
-// 動画更新処理の世代番号 teset
+// 動画更新処理の世代番号
 let updateGeneration = 0;
 
 
